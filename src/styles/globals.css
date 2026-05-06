@@ -1,6 +1,502 @@
 @import "tailwindcss";
 
+/* ============================================================
+   ALLEN REVIEWER — CSS THEME PLAN
+   Brand extracted directly from logo:
+   • Background:    Deep Purple  #3B1066 / #2A0A52
+   • Left circuit:  Orange       #F97316 → #FB923C (warm traces)
+   • Right circuit: Sky Blue     #7EC8E3 → #93C5FD (cool nodes)
+   • "ALLEN" text:  Cyan-Blue    #38BDF8
+   • "REVIEWER":    Orange       #F97316
+   • Circuit glow:  Soft purple  #8B5CF6
+   ============================================================ */
+
 @theme {
+  /* ── Fonts ───────────────────────────────────────────────── */
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-mono: var(--font-geist-mono), "Fira Code", "Cascadia Code",
+    "JetBrains Mono", ui-monospace, monospace;
+
+  /* ── Brand Core ──────────────────────────────────────────── */
+  --color-brand-bg:           #2A0A52;   /* deepest purple — page background */
+  --color-brand-bg-alt:       #3B1066;   /* slightly lighter purple — cards   */
+  --color-brand-bg-elevated:  #4A1880;   /* hovered / active surfaces         */
+  --color-brand-border:       #5B2A8A;   /* subtle borders                    */
+  --color-brand-border-glow:  #7B3FB0;   /* glowing / focus borders           */
+
+  /* ── Orange (left-brain / warm) ─────────────────────────── */
+  --color-orange-300:  #FDB373;
+  --color-orange-400:  #FB923C;
+  --color-orange-500:  #F97316;          /* primary CTA, "REVIEWER" word      */
+  --color-orange-600:  #EA6A08;
+  --color-orange-glow: #F9731640;        /* orange glow for shadows/rings     */
+
+  /* ── Sky Blue (right-brain / cool) ──────────────────────── */
+  --color-blue-200:    #BAE6FD;
+  --color-blue-300:    #7DD3FC;
+  --color-blue-400:    #38BDF8;          /* "ALLEN" word, primary headings    */
+  --color-blue-500:    #0EA5E9;
+  --color-blue-glow:   #38BDF840;        /* blue glow for shadows/rings       */
+
+  /* ── Purple Accent (circuit glow) ───────────────────────── */
+  --color-purple-400:  #A78BFA;
+  --color-purple-500:  #8B5CF6;          /* accent, tags, badges              */
+  --color-purple-600:  #7C3AED;
+  --color-purple-glow: #8B5CF640;
+
+  /* ── Neutral / Text ──────────────────────────────────────── */
+  --color-text-primary:   #F1F5F9;       /* main body text (near-white)       */
+  --color-text-secondary: #CBD5E1;       /* secondary / muted text            */
+  --color-text-muted:     #94A3B8;       /* placeholder, helper text          */
+  --color-text-disabled:  #475569;       /* disabled state                    */
+
+  /* ── Semantic States ─────────────────────────────────────── */
+  --color-success:     #22C55E;
+  --color-success-bg:  #14532D40;
+  --color-warning:     #F59E0B;
+  --color-warning-bg:  #78350F40;
+  --color-error:       #EF4444;
+  --color-error-bg:    #7F1D1D40;
+  --color-info:        #38BDF8;
+  --color-info-bg:     #0C4A6E40;
+
+  /* ── Gradients ───────────────────────────────────────────── */
+  --gradient-brand:         linear-gradient(135deg, #F97316 0%, #8B5CF6 50%, #38BDF8 100%);
+  --gradient-orange-purple: linear-gradient(135deg, #F97316 0%, #8B5CF6 100%);
+  --gradient-purple-blue:   linear-gradient(135deg, #8B5CF6 0%, #38BDF8 100%);
+  --gradient-bg:            linear-gradient(160deg, #2A0A52 0%, #1E0840 60%, #0F0525 100%);
+  --gradient-card:          linear-gradient(145deg, #3B106680 0%, #2A0A5280 100%);
+  --gradient-text-allen:    linear-gradient(90deg, #38BDF8 0%, #7DD3FC 100%);
+  --gradient-text-reviewer: linear-gradient(90deg, #F97316 0%, #FB923C 100%);
+
+  /* ── Shadows ─────────────────────────────────────────────── */
+  --shadow-sm:       0 1px 3px #00000060;
+  --shadow-md:       0 4px 16px #00000080;
+  --shadow-lg:       0 8px 32px #00000090;
+  --shadow-orange:   0 0 20px #F9731640, 0 0 60px #F9731620;
+  --shadow-blue:     0 0 20px #38BDF840, 0 0 60px #38BDF820;
+  --shadow-purple:   0 0 20px #8B5CF640, 0 0 60px #8B5CF620;
+  --shadow-glow-sm:  0 0 8px  #8B5CF660;
+  --shadow-glow-md:  0 0 20px #8B5CF650;
+  --shadow-glow-lg:  0 0 40px #8B5CF640;
+
+  /* ── Border Radius ───────────────────────────────────────── */
+  --radius-sm:   4px;
+  --radius-md:   8px;
+  --radius-lg:   12px;
+  --radius-xl:   16px;
+  --radius-2xl:  24px;
+  --radius-full: 9999px;
+
+  /* ── Spacing Scale (custom additions) ───────────────────── */
+  --space-18:  4.5rem;
+  --space-22:  5.5rem;
+
+  /* ── Animation Timings ───────────────────────────────────── */
+  --duration-fast:    150ms;
+  --duration-base:    250ms;
+  --duration-slow:    400ms;
+  --duration-slower:  600ms;
+  --ease-spring:      cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-smooth:      cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-in-expo:     cubic-bezier(0.95, 0.05, 0.795, 0.035);
+  --ease-out-expo:    cubic-bezier(0.19, 1, 0.22, 1);
+
+  /* ── Z-index Scale ───────────────────────────────────────── */
+  --z-below:   -1;
+  --z-base:     0;
+  --z-raised:   10;
+  --z-dropdown: 100;
+  --z-sticky:   200;
+  --z-overlay:  300;
+  --z-modal:    400;
+  --z-toast:    500;
+}
+
+/* ============================================================
+   BASE RESETS & GLOBAL STYLES
+   ============================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background: var(--gradient-bg);
+  background-attachment: fixed;
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+/* ============================================================
+   SCROLLBAR STYLING
+   ============================================================ */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-brand-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-brand-border-glow);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-purple-500);
+}
+
+/* ============================================================
+   SELECTION
+   ============================================================ */
+
+::selection {
+  background: var(--color-purple-600);
+  color: var(--color-text-primary);
+}
+
+/* ============================================================
+   FOCUS VISIBLE (accessibility)
+   ============================================================ */
+
+:focus-visible {
+  outline: 2px solid var(--color-blue-400);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
+/* ============================================================
+   TYPOGRAPHY UTILITIES
+   ============================================================ */
+
+.text-gradient-allen {
+  background: var(--gradient-text-allen);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-reviewer {
+  background: var(--gradient-text-reviewer);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-brand {
+  background: var(--gradient-brand);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ============================================================
+   GLASS CARD SURFACE
+   ============================================================ */
+
+.glass-card {
+  background: var(--gradient-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--color-brand-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+  transition: border-color var(--duration-base) var(--ease-smooth),
+              box-shadow var(--duration-base) var(--ease-smooth);
+}
+
+.glass-card:hover {
+  border-color: var(--color-brand-border-glow);
+  box-shadow: var(--shadow-lg), var(--shadow-purple);
+}
+
+/* ============================================================
+   GLOW EFFECTS
+   ============================================================ */
+
+.glow-orange {
+  box-shadow: var(--shadow-orange);
+}
+
+.glow-blue {
+  box-shadow: var(--shadow-blue);
+}
+
+.glow-purple {
+  box-shadow: var(--shadow-purple);
+}
+
+/* ============================================================
+   CIRCUIT PATTERN BACKGROUND (decorative)
+   ============================================================ */
+
+.circuit-bg {
+  position: relative;
+  overflow: hidden;
+}
+
+.circuit-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 20% 30%, var(--color-orange-glow) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, var(--color-blue-glow) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, var(--color-purple-glow) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: var(--z-below);
+}
+
+/* ============================================================
+   BUTTON BASE STYLES
+   ============================================================ */
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.5rem;
+  background: linear-gradient(135deg, var(--color-orange-500), var(--color-orange-600));
+  color: #fff;
+  font-weight: 600;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-orange-400);
+  cursor: pointer;
+  transition: all var(--duration-base) var(--ease-smooth);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, var(--color-orange-400), var(--color-orange-500));
+  box-shadow: var(--shadow-orange);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.5rem;
+  background: transparent;
+  color: var(--color-blue-400);
+  font-weight: 600;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-blue-400);
+  cursor: pointer;
+  transition: all var(--duration-base) var(--ease-smooth);
+}
+
+.btn-secondary:hover {
+  background: var(--color-blue-glow);
+  box-shadow: var(--shadow-blue);
+  transform: translateY(-1px);
+}
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.5rem;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-brand-border);
+  cursor: pointer;
+  transition: all var(--duration-base) var(--ease-smooth);
+}
+
+.btn-ghost:hover {
+  background: var(--color-brand-bg-elevated);
+  border-color: var(--color-brand-border-glow);
+  color: var(--color-text-primary);
+}
+
+/* ============================================================
+   BADGE / TAG STYLES
+   ============================================================ */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: var(--radius-full);
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+}
+
+.badge-orange {
+  background: var(--color-orange-glow);
+  color: var(--color-orange-400);
+  border: 1px solid var(--color-orange-500);
+}
+
+.badge-blue {
+  background: var(--color-blue-glow);
+  color: var(--color-blue-400);
+  border: 1px solid var(--color-blue-400);
+}
+
+.badge-purple {
+  background: var(--color-purple-glow);
+  color: var(--color-purple-400);
+  border: 1px solid var(--color-purple-500);
+}
+
+/* ============================================================
+   CODE EDITOR SURFACE
+   ============================================================ */
+
+.code-surface {
+  background: #0F0525;
+  border: 1px solid var(--color-brand-border);
+  border-radius: var(--radius-lg);
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  line-height: 1.7;
+  color: var(--color-text-primary);
+  box-shadow: inset 0 2px 8px #00000060;
+}
+
+.code-surface:focus-within {
+  border-color: var(--color-purple-500);
+  box-shadow: inset 0 2px 8px #00000060, 0 0 0 2px var(--color-purple-glow);
+}
+
+/* ============================================================
+   DIVIDER
+   ============================================================ */
+
+.divider {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--color-brand-border-glow) 30%,
+    var(--color-purple-500) 50%,
+    var(--color-brand-border-glow) 70%,
+    transparent 100%
+  );
+  border: none;
+}
+
+/* ============================================================
+   KEYFRAME ANIMATIONS
+   ============================================================ */
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.5; }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes circuit-trace {
+  0%   { stroke-dashoffset: 1000; opacity: 0; }
+  20%  { opacity: 1; }
+  100% { stroke-dashoffset: 0; opacity: 1; }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ============================================================
+   ANIMATION UTILITY CLASSES
+   ============================================================ */
+
+.animate-fade-in-up {
+  animation: fade-in-up var(--duration-slow) var(--ease-out-expo) both;
+}
+
+.animate-fade-in {
+  animation: fade-in var(--duration-slow) var(--ease-smooth) both;
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right var(--duration-slow) var(--ease-out-expo) both;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s var(--ease-smooth) infinite;
+}
+
+/* Stagger delays for list items */
+.stagger-1 { animation-delay: 0ms; }
+.stagger-2 { animation-delay: 80ms; }
+.stagger-3 { animation-delay: 160ms; }
+.stagger-4 { animation-delay: 240ms; }
+.stagger-5 { animation-delay: 320ms; }
+
+/* ============================================================
+   LOADING SKELETON
+   ============================================================ */
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-brand-bg-alt) 25%,
+    var(--color-brand-bg-elevated) 50%,
+    var(--color-brand-bg-alt) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius-md);
 }
