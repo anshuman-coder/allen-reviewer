@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useState, useRef, useEffect } from "react";
+import { formatDistanceToNow } from "date-fns";
 
 /* ══════════════════════════════════════════════════════════════════════
    TYPES
@@ -124,17 +125,6 @@ function getLang(lang: string) {
   return LANG_COLORS[lang] ?? { bg: "rgba(148,163,184,0.1)", text: "#94A3B8", dot: "#94A3B8" };
 }
 
-function timeAgo(date: Date): string {
-  const diff = Date.now() - date.getTime();
-  const m = Math.floor(diff / 60000);
-  const h = Math.floor(diff / 3600000);
-  const d = Math.floor(diff / 86400000);
-  if (m < 1)  return "just now";
-  if (m < 60) return `${m}m ago`;
-  if (h < 24) return `${h}h ago`;
-  if (d < 7)  return `${d}d ago`;
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-}
 
 function groupSessions(sessions: ChatSession[]) {
   const DAY = 86400000;
@@ -144,10 +134,10 @@ function groupSessions(sessions: ChatSession[]) {
   };
   sessions.forEach((s) => {
     const diff = now - s.timestamp.getTime();
-    if      (diff < DAY)       buckets["Today"]!.push(s);
-    else if (diff < 2 * DAY)   buckets["Yesterday"]!.push(s);
+    if      (diff < DAY)       buckets.Today!.push(s);
+    else if (diff < 2 * DAY)   buckets.Yesterday!.push(s);
     else if (diff < 7 * DAY)   buckets["This Week"]!.push(s);
-    else                        buckets["Older"]!.push(s);
+    else                        buckets.Older!.push(s);
   });
   return Object.entries(buckets).filter(([, items]) => items.length > 0);
 }
@@ -336,7 +326,7 @@ function ChatItem({
 
         {/* Row 3 — timestamp */}
         <span className="pl-2 text-[10px]" style={{ color: S.textDim }}>
-          {timeAgo(session.timestamp)}
+          {formatDistanceToNow(session.timestamp, { addSuffix: true })}
         </span>
       </Link>
 
@@ -666,7 +656,7 @@ export default function Layout({
             /* Collapsed avatar only */
             <div className="flex justify-center">
               {userImage ? (
-                <img src={userImage} alt={userName} className="h-8 w-8 rounded-full object-cover" />
+                <Image src={userImage} alt={userName} width={32} height={32} className="h-8 w-8 rounded-full object-cover" />
               ) : (
                 <div
                   className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white"
@@ -688,7 +678,7 @@ export default function Layout({
               onMouseLeave={(e) => hoverOff(e.currentTarget, { background: "transparent" })}
             >
               {userImage ? (
-                <img src={userImage} alt={userName} className="h-8 w-8 shrink-0 rounded-full object-cover" />
+                <Image src={userImage} alt={userName} width={32} height={32} className="h-8 w-8 shrink-0 rounded-full object-cover" />
               ) : (
                 <div
                   className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
