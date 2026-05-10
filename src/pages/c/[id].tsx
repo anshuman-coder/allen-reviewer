@@ -1,121 +1,20 @@
-import Head from "next/head";
+import PageHelmet from "@/components/global/PageHelmet";
+import { DEFAULT_LANGUAGE, DEMO_CODE, DEMO_REVIEW } from "@/constants/demo";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import { useState, useCallback } from "react";
 import Editor from "react-simple-code-editor";
 import Markdown from "react-markdown";
 
-// ← correct import path as requested
 import Layout from "@/components/global/layout";
 
 /* ══════════════════════════════════════════════════════════════════════
-   PRISM  (loaded via CDN <script> tags in <Head>)
+   PRISM  (loaded via CDN <script> tags in _document.tsx)
 ══════════════════════════════════════════════════════════════════════ */
 declare const Prism: {
   highlight: (code: string, grammar: unknown, language: string) => string;
   languages: Record<string, unknown>;
 };
-
-/* ══════════════════════════════════════════════════════════════════════
-   DEMO FIXTURES
-══════════════════════════════════════════════════════════════════════ */
-const DEMO_CODE = `function fetchUserData(userId) {
-  var data = null;
-
-  fetch('/api/users/' + userId)
-    .then(function(res) {
-      data = res.json();
-    })
-    .then(function() {
-      console.log(data);
-      document.getElementById('user').innerHTML = data.name;
-    })
-    .catch(function(e) {
-      console.log(e);
-    });
-
-  return data;
-}`;
-
-const DEMO_REVIEW = `## Code Review — \`fetchUserData\`
-
-> **Overall Rating:** ⚠️ Needs Improvement — 3 / 5
-
----
-
-### 🔴 Critical Issues
-
-#### 1. Race condition — \`data\` is always \`null\` on return
-The function returns \`data\` **synchronously** before the Promise resolves.
-\`fetch\` is async; the assignment inside \`.then()\` never happens in time.
-
-\`\`\`js
-// ❌ Always returns null
-function fetchUserData(userId) {
-  var data = null;
-  fetch(...).then(() => { data = res.json(); }); // too late
-  return data; // ← null every single time
-}
-\`\`\`
-
-#### 2. \`res.json()\` is itself a Promise
-\`Response.json()\` returns a Promise — you need to \`await\` it or chain another \`.then\`.
-
----
-
-### 🟠 Significant Issues
-
-#### 3. XSS via \`innerHTML\`
-\`\`\`js
-// ❌ Dangerous — arbitrary HTML injection
-document.getElementById('user').innerHTML = data.name;
-
-// ✅ Safe
-document.getElementById('user').textContent = data.name;
-\`\`\`
-
-#### 4. Silent error swallowing
-\`console.log(e)\` discards errors silently. Propagate or handle them meaningfully.
-
----
-
-### 🟡 Minor Issues
-
-- Use \`const\` / \`let\` instead of \`var\` for block scoping.
-- Use template literals instead of string concatenation for URLs.
-
----
-
-### ✅ Suggested Rewrite
-
-\`\`\`js
-async function fetchUserData(userId) {
-  try {
-    const res = await fetch(\`/api/users/\${userId}\`);
-    if (!res.ok) throw new Error(\`HTTP \${res.status}\`);
-    const data = await res.json();
-    const el = document.getElementById('user');
-    if (el) el.textContent = data.name;
-    return data;
-  } catch (err) {
-    console.error('fetchUserData failed:', err);
-    throw err;
-  }
-}
-\`\`\`
-
----
-
-### 📋 Summary
-
-| Issue | Severity | Fixed |
-|---|---|---|
-| Async race condition | 🔴 Critical | ✅ |
-| \`res.json()\` not awaited | 🔴 Critical | ✅ |
-| XSS via innerHTML | 🟠 High | ✅ |
-| Silent catch | 🟠 Medium | ✅ |
-| \`var\` usage | 🟡 Low | ✅ |
-`;
 
 /* ══════════════════════════════════════════════════════════════════════
    CONSTANTS
@@ -139,11 +38,10 @@ export default function EditorPage() {
   const { id }      = router.query;
 
   const [code, setCode]         = useState(DEMO_CODE);
-  const [language, setLanguage] = useState("javascript");
-  const [review]                = useState(DEMO_REVIEW);   // will be dynamic later
+  const [language, setLanguage] = useState(DEFAULT_LANGUAGE);
+  const [review]                = useState(DEMO_REVIEW);
   const [isReviewing]           = useState(false);
 
-  /* Prism syntax highlight */
   const highlight = useCallback(
     (src: string) => {
       try {
@@ -157,30 +55,17 @@ export default function EditorPage() {
 
   const ext = EXT[language] ?? "js";
 
-  /* ── hover helpers (avoids inline style prop duplication) ── */
-  const ho = (el: HTMLElement, s: Partial<CSSStyleDeclaration>) => Object.assign(el.style, s);
-
   return (
     <>
-      <Head>
-        <title>Allen Reviewer — {String(id ?? "New Review")}</title>
-        <meta name="description" content="AI-powered code review session" />
-        <link rel="icon" href="/favicon.ico" />
-        {/* Prism theme */}
-        <link
-          rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css"
-        />
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" defer />
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js" defer />
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js" defer />
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js" defer />
-      </Head>
+      <PageHelmet
+        title={String(id ?? "New Review")}
+        description="AI-powered code review session"
+        withPrism
+      />
 
-      {/* ── Sidebar layout wrapper ── */}
       <Layout
         activeChatId={String(id ?? "")}
-        isAuthenticated={false}      // hardcoded — wire to useSession() later
+        isAuthenticated={false}
         userName="Guest User"
         userImage={null}
       >
@@ -188,39 +73,16 @@ export default function EditorPage() {
         {/* ════════════════════════════════════════
             TOP NAV BAR
         ════════════════════════════════════════ */}
-        <header
-          className="flex h-14 shrink-0 items-center justify-between border-b px-5"
-          style={{
-            borderColor: "rgba(91,42,138,0.4)",
-            background: "rgba(42,10,82,0.95)",
-            backdropFilter: "blur(12px)",
-          }}
-        >
+        <header className="flex h-14 shrink-0 items-center justify-between border-b border-brand-border/40 bg-brand-bg/95 px-5 backdrop-blur-md">
+
           {/* Chat ID pill */}
-          <div
-            className="flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium"
-            style={{
-              background: "rgba(139,92,246,0.12)",
-              border: "1px solid rgba(139,92,246,0.35)",
-              color: "#A78BFA",
-            }}
-          >
-            <span
-              className="h-1.5 w-1.5 rounded-full bg-purple-400"
-              style={{ boxShadow: "0 0 6px #A78BFA" }}
-            />
+          <div className="flex items-center gap-2 rounded-full border border-purple-500/35 bg-purple-500/12 px-3 py-1 text-xs font-medium text-purple-400">
+            <span className="h-1.5 w-1.5 rounded-full bg-purple-400 shadow-[0_0_6px_#A78BFA]" />
             {String(id ?? "new-session")}
           </div>
 
           {/* Model badge */}
-          <div
-            className="flex items-center gap-2 rounded-full px-3 py-1 text-xs"
-            style={{
-              background: "rgba(56,189,248,0.07)",
-              border: "1px solid rgba(56,189,248,0.2)",
-              color: "#7DD3FC",
-            }}
-          >
+          <div className="flex items-center gap-2 rounded-full border border-blue-400/20 bg-blue-400/7 px-3 py-1 text-xs text-blue-300">
             <Image src="/logo.png" alt="" width={14} height={14} />
             Allen AI
           </div>
@@ -234,24 +96,17 @@ export default function EditorPage() {
           {/* ──────────────────────────────────────
               LEFT — Code editor
           ────────────────────────────────────── */}
-          <div
-            className="flex w-1/2 flex-col border-r"
-            style={{ borderColor: "rgba(91,42,138,0.4)" }}
-          >
+          <div className="flex w-1/2 flex-col border-r border-brand-border/40">
+
             {/* Editor toolbar */}
-            <div
-              className="flex h-11 shrink-0 items-center justify-between border-b px-4"
-              style={{
-                borderColor: "rgba(91,42,138,0.3)",
-                background: "rgba(15,5,37,0.75)",
-              }}
-            >
+            <div className="flex h-11 shrink-0 items-center justify-between border-b border-brand-border/30 bg-surface-dark/75 px-4">
+
               {/* Traffic lights + filename */}
               <div className="flex items-center gap-2">
                 <span className="h-2.5 w-2.5 rounded-full bg-error opacity-70" />
                 <span className="h-2.5 w-2.5 rounded-full bg-warning opacity-70" />
                 <span className="h-2.5 w-2.5 rounded-full bg-success opacity-70" />
-                <span className="ml-3 text-xs" style={{ color: "rgba(148,163,184,0.4)" }}>
+                <span className="ml-3 text-xs text-text-muted/40">
                   snippet.{ext}
                 </span>
               </div>
@@ -260,16 +115,10 @@ export default function EditorPage() {
               <select
                 value={language}
                 onChange={(e) => setLanguage(e.target.value)}
-                className="rounded-md px-2 py-1 text-xs font-medium outline-none"
-                style={{
-                  background: "rgba(42,10,82,0.9)",
-                  border: "1px solid rgba(91,42,138,0.5)",
-                  color: "#7DD3FC",
-                  cursor: "pointer",
-                }}
+                className="cursor-pointer rounded-md border border-brand-border/50 bg-brand-bg/90 px-2 py-1 text-xs font-medium text-blue-300 outline-none"
               >
                 {LANGUAGES.map((l) => (
-                  <option key={l} value={l} style={{ background: "#2A0A52" }}>
+                  <option key={l} value={l}>
                     {l.charAt(0).toUpperCase() + l.slice(1)}
                   </option>
                 ))}
@@ -277,22 +126,16 @@ export default function EditorPage() {
             </div>
 
             {/* Editor body */}
-            <div className="relative flex-1 overflow-auto" style={{ background: "#0F0520" }}>
+            <div className="relative flex-1 overflow-auto bg-editor-bg">
               {/* Gutter shadow */}
-              <div
-                className="pointer-events-none absolute bottom-0 left-0 top-0 w-10"
-                style={{
-                  background: "rgba(139,92,246,0.04)",
-                  borderRight: "1px solid rgba(91,42,138,0.25)",
-                }}
-              />
+              <div className="pointer-events-none absolute bottom-0 left-0 top-0 w-10 border-r border-brand-border/25 bg-purple-500/4" />
               <Editor
                 value={code}
                 onValueChange={setCode}
                 highlight={highlight}
                 padding={{ top: 16, bottom: 16, left: 48, right: 16 }}
                 style={{
-                  fontFamily: '"Fira Code","Cascadia Code","JetBrains Mono",monospace',
+                  fontFamily: 'var(--font-mono)',
                   fontSize: 13.5,
                   lineHeight: 1.75,
                   color: "#E2E8F0",
@@ -304,38 +147,14 @@ export default function EditorPage() {
             </div>
 
             {/* Footer: stats + Review button */}
-            <div
-              className="flex h-16 shrink-0 items-center justify-between border-t px-4"
-              style={{
-                borderColor: "rgba(91,42,138,0.3)",
-                background: "rgba(15,5,37,0.85)",
-              }}
-            >
-              <span className="text-xs" style={{ color: "rgba(148,163,184,0.32)" }}>
+            <div className="flex h-16 shrink-0 items-center justify-between border-t border-brand-border/30 bg-surface-dark/85 px-4">
+              <span className="text-xs text-text-muted/40">
                 {code.split("\n").length} lines · {code.length} chars
               </span>
 
               <button
                 disabled={isReviewing || !code.trim()}
-                className="group relative flex items-center gap-2.5 overflow-hidden rounded-xl px-6 py-2.5 text-sm font-bold text-white transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-40"
-                style={{
-                  background: "linear-gradient(135deg,#F97316,#EA6A08)",
-                  border: "1px solid rgba(249,115,22,0.5)",
-                  boxShadow: "0 4px 20px rgba(249,115,22,0.28)",
-                }}
-                onMouseEnter={(e) => {
-                  if (!isReviewing)
-                    ho(e.currentTarget, {
-                      boxShadow: "0 6px 28px rgba(249,115,22,0.48),0 0 40px rgba(249,115,22,0.18)",
-                      transform: "translateY(-1px)",
-                    });
-                }}
-                onMouseLeave={(e) =>
-                  ho(e.currentTarget, {
-                    boxShadow: "0 4px 20px rgba(249,115,22,0.28)",
-                    transform: "translateY(0)",
-                  })
-                }
+                className="group relative flex items-center gap-2.5 overflow-hidden rounded-xl border border-orange-500/50 bg-linear-[135deg] from-orange-500 to-orange-600 px-6 py-2.5 text-sm font-bold text-white shadow-btn-review transition-all duration-300 hover:-translate-y-px hover:shadow-btn-review-hover disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {/* Shimmer sweep */}
                 <span className="pointer-events-none absolute inset-0 -translate-x-full skew-x-[-20deg] bg-white/10 transition-transform duration-700 group-hover:translate-x-full" />
@@ -360,43 +179,24 @@ export default function EditorPage() {
           {/* ──────────────────────────────────────
               RIGHT — AI Review output
           ────────────────────────────────────── */}
-          <div className="flex w-1/2 flex-col" style={{ background: "#0D0420" }}>
+          <div className="flex w-1/2 flex-col bg-review-bg">
 
             {/* Review panel header */}
-            <div
-              className="flex h-11 shrink-0 items-center justify-between border-b px-4"
-              style={{
-                borderColor: "rgba(56,189,248,0.18)",
-                background: "rgba(13,4,32,0.9)",
-              }}
-            >
+            <div className="flex h-11 shrink-0 items-center justify-between border-b border-blue-400/18 bg-review-bg/90 px-4">
               <div className="flex items-center gap-2">
-                <div
-                  className="flex h-5 w-5 items-center justify-center rounded"
-                  style={{ background: "linear-gradient(135deg,#38BDF8,#7DD3FC)" }}
-                >
+                <div className="flex h-5 w-5 items-center justify-center rounded bg-linear-[135deg] from-blue-400 to-blue-300">
                   <svg viewBox="0 0 16 16" fill="white" className="h-3 w-3" aria-hidden="true">
                     <path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 2a5 5 0 110 10A5 5 0 018 3zm-.5 2.5v3l2.5 1.5.5-.87-2-.5V5.5h-1z" />
                   </svg>
                 </div>
-                <span className="text-xs font-semibold tracking-wide" style={{ color: "#7DD3FC" }}>
+                <span className="text-xs font-semibold tracking-wide text-blue-300">
                   AI Review
                 </span>
               </div>
 
               {/* Status pill */}
-              <div
-                className="flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs"
-                style={{
-                  background: "rgba(34,197,94,0.09)",
-                  border: "1px solid rgba(34,197,94,0.28)",
-                  color: "#22C55E",
-                }}
-              >
-                <span
-                  className="h-1.5 w-1.5 rounded-full bg-success"
-                  style={{ boxShadow: "0 0 5px #22C55E" }}
-                />
+              <div className="flex items-center gap-1.5 rounded-full border border-success/28 bg-success/9 px-2 py-0.5 text-xs text-success">
+                <span className="h-1.5 w-1.5 rounded-full bg-success shadow-[0_0_5px_#22C55E]" />
                 Ready
               </div>
             </div>
@@ -408,138 +208,81 @@ export default function EditorPage() {
                   <Markdown
                     components={{
                       h2: ({ children }) => (
-                        <h2
-                          className="mb-3 mt-6 text-lg font-bold first:mt-0"
-                          style={{
-                            background: "linear-gradient(90deg,#38BDF8,#7DD3FC)",
-                            WebkitBackgroundClip: "text",
-                            WebkitTextFillColor: "transparent",
-                          }}
-                        >
+                        <h2 className="text-gradient-allen mb-3 mt-6 text-lg font-bold first:mt-0">
                           {children}
                         </h2>
                       ),
                       h3: ({ children }) => (
-                        <h3 className="mb-2 mt-5 text-base font-semibold" style={{ color: "#CBD5E1" }}>
+                        <h3 className="mb-2 mt-5 text-base font-semibold text-text-secondary">
                           {children}
                         </h3>
                       ),
                       h4: ({ children }) => (
-                        <h4 className="mb-1.5 mt-4 text-sm font-semibold" style={{ color: "#94A3B8" }}>
+                        <h4 className="mb-1.5 mt-4 text-sm font-semibold text-text-muted">
                           {children}
                         </h4>
                       ),
                       p: ({ children }) => (
-                        <p className="mb-3 text-sm leading-relaxed" style={{ color: "#CBD5E1" }}>
+                        <p className="mb-3 text-sm leading-relaxed text-text-secondary">
                           {children}
                         </p>
                       ),
                       blockquote: ({ children }) => (
-                        <blockquote
-                          className="my-3 rounded-lg border-l-4 px-4 py-2.5 text-sm"
-                          style={{
-                            borderColor: "#F97316",
-                            background: "rgba(249,115,22,0.07)",
-                            color: "#FDB373",
-                          }}
-                        >
+                        <blockquote className="my-3 rounded-lg border-l-4 border-orange-500 bg-orange-500/[0.07] px-4 py-2.5 text-sm text-orange-300">
                           {children}
                         </blockquote>
                       ),
                       code: ({ children, className }) =>
                         className?.includes("language-") ? (
-                          <code
-                            className={className}
-                            style={{
-                              display: "block",
-                              fontFamily: '"Fira Code",monospace',
-                              fontSize: 12.5,
-                              lineHeight: 1.72,
-                              color: "#E2E8F0",
-                            }}
-                          >
+                          <code className={`${className} block font-mono text-[12.5px] leading-[1.72] text-text-primary`}>
                             {children}
                           </code>
                         ) : (
-                          <code
-                            className="rounded px-1.5 py-0.5 text-xs"
-                            style={{
-                              background: "rgba(139,92,246,0.17)",
-                              color: "#A78BFA",
-                              fontFamily: '"Fira Code",monospace',
-                            }}
-                          >
+                          <code className="rounded bg-purple-500/17 px-1.5 py-0.5 font-mono text-xs text-purple-400">
                             {children}
                           </code>
                         ),
                       pre: ({ children }) => (
-                        <pre
-                          className="my-3 overflow-x-auto rounded-xl p-4 text-xs"
-                          style={{
-                            background: "#0A0118",
-                            border: "1px solid rgba(91,42,138,0.38)",
-                            fontFamily: '"Fira Code",monospace',
-                            lineHeight: 1.75,
-                          }}
-                        >
+                        <pre className="my-3 overflow-x-auto rounded-xl border border-brand-border/38 bg-code-bg p-4 font-mono text-xs leading-[1.75]">
                           {children}
                         </pre>
                       ),
                       ul: ({ children }) => (
-                        <ul className="mb-3 space-y-1 pl-5 text-sm" style={{ color: "#CBD5E1", listStyleType: "disc" }}>
+                        <ul className="mb-3 list-disc space-y-1 pl-5 text-sm text-text-secondary">
                           {children}
                         </ul>
                       ),
                       ol: ({ children }) => (
-                        <ol className="mb-3 space-y-1 pl-5 text-sm" style={{ color: "#CBD5E1", listStyleType: "decimal" }}>
+                        <ol className="mb-3 list-decimal space-y-1 pl-5 text-sm text-text-secondary">
                           {children}
                         </ol>
                       ),
                       li: ({ children }) => (
-                        <li className="leading-relaxed" style={{ color: "#CBD5E1" }}>{children}</li>
+                        <li className="leading-relaxed text-text-secondary">{children}</li>
                       ),
-                      hr: () => (
-                        <hr
-                          className="my-4 border-none"
-                          style={{
-                            height: 1,
-                            background: "linear-gradient(90deg,transparent,rgba(91,42,138,0.7) 30%,rgba(139,92,246,0.5) 50%,rgba(91,42,138,0.7) 70%,transparent)",
-                          }}
-                        />
-                      ),
+                      hr: () => <hr className="divider my-4" />,
                       table: ({ children }) => (
-                        <div
-                          className="my-4 overflow-x-auto rounded-xl"
-                          style={{ border: "1px solid rgba(91,42,138,0.38)" }}
-                        >
+                        <div className="my-4 overflow-x-auto rounded-xl border border-brand-border/38">
                           <table className="w-full text-xs">{children}</table>
                         </div>
                       ),
                       thead: ({ children }) => (
-                        <thead
-                          style={{
-                            background: "rgba(42,10,82,0.8)",
-                            borderBottom: "1px solid rgba(91,42,138,0.38)",
-                          }}
-                        >
+                        <thead className="border-b border-brand-border/38 bg-brand-bg/80">
                           {children}
                         </thead>
                       ),
                       th: ({ children }) => (
-                        <th className="px-4 py-2.5 text-left font-semibold" style={{ color: "#7DD3FC" }}>
+                        <th className="px-4 py-2.5 text-left font-semibold text-blue-300">
                           {children}
                         </th>
                       ),
                       td: ({ children }) => (
-                        <td
-                          className="px-4 py-2.5"
-                          style={{ color: "#CBD5E1", borderTop: "1px solid rgba(91,42,138,0.2)" }}
-                        >
+                        <td className="border-t border-brand-border/20 px-4 py-2.5 text-text-secondary">
                           {children}
                         </td>
                       ),
                       strong: ({ children }) => (
-                        <strong className="font-semibold" style={{ color: "#F1F5F9" }}>{children}</strong>
+                        <strong className="font-semibold text-text-primary">{children}</strong>
                       ),
                     }}
                   >
@@ -549,20 +292,14 @@ export default function EditorPage() {
               ) : (
                 /* Empty state */
                 <div className="flex h-full flex-col items-center justify-center gap-4 opacity-35">
-                  <div
-                    className="flex h-16 w-16 items-center justify-center rounded-2xl"
-                    style={{
-                      background: "rgba(56,189,248,0.07)",
-                      border: "1px solid rgba(56,189,248,0.18)",
-                    }}
-                  >
+                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-blue-400/18 bg-blue-400/[0.07]">
                     <svg viewBox="0 0 24 24" fill="none" stroke="#38BDF8" strokeWidth="1.5" className="h-8 w-8">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 6.75 22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3-4.5 16.5" />
                     </svg>
                   </div>
-                  <p className="text-sm" style={{ color: "#94A3B8" }}>
+                  <p className="text-sm text-text-muted">
                     Paste your code and hit{" "}
-                    <strong style={{ color: "#F97316" }}>Review Code</strong>
+                    <strong className="text-orange-500">Review Code</strong>
                   </p>
                 </div>
               )}
@@ -570,26 +307,6 @@ export default function EditorPage() {
           </div>
         </div>
       </Layout>
-
-      {/* ── Scoped styles ── */}
-      <style>{`
-        .editor-ta:focus           { outline: none !important; }
-        .review-fade               { animation: rFade 0.4s cubic-bezier(0.19,1,0.22,1) both; }
-        @keyframes rFade {
-          from { opacity: 0; transform: translateY(8px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        .review-scroll::-webkit-scrollbar       { width: 4px; }
-        .review-scroll::-webkit-scrollbar-track { background: transparent; }
-        .review-scroll::-webkit-scrollbar-thumb {
-          background: rgba(91,42,138,0.45);
-          border-radius: 999px;
-        }
-        .review-scroll::-webkit-scrollbar-thumb:hover {
-          background: rgba(139,92,246,0.75);
-        }
-        select option { background: #2A0A52; color: #E2E8F0; }
-      `}</style>
     </>
   );
 }
