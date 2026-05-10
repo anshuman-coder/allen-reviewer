@@ -60,7 +60,6 @@ export default function EditorPage() {
       <PageHelmet
         title={String(id ?? "New Review")}
         description="AI-powered code review session"
-        withPrism
       />
 
       <Layout
