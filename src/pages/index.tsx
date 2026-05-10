@@ -11,7 +11,7 @@ export default function Home() {
   };
 
   const handleGuestContinue = () => {
-    void router.push("/editor");
+    void router.push("/c/abc");
   };
 
   return (
