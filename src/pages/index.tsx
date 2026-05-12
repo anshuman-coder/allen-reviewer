@@ -1,24 +1,10 @@
-import SignInWithGithub from "@/components/global/SignInWithGithub";
 import PageHelmet from "@/components/global/PageHelmet";
-import AllenLogo from "@/components/icons/AllenLogo";
-import GithubIcon from "@/components/icons/github";
 import { BottomRightCircuit, TopLeftCircuit } from "@/components/icons/stroke";
 import { signIn } from "next-auth/react";
-import Image from "next/image";
 import { useRouter } from "next/router";
-import GuestIcon from "@/components/icons/Guest";
-import ContinueAsGuest from "@/components/global/ContinueAsGuest";
+import AuthCard from "@/components/auth/AuthCard";
 
 export default function Home() {
-  const router = useRouter();
-
-  const handleGithubSignIn = () => {
-    void signIn("github", { callbackUrl: "/editor" });
-  };
-
-  const handleGuestContinue = () => {
-    void router.push("/c/abc");
-  };
 
   return (
     <>
@@ -44,47 +30,7 @@ export default function Home() {
         <TopLeftCircuit />
         <BottomRightCircuit />
 
-        {/* ── Auth Card ── */}
-        <div className="animate-fade-in-up duration-600 relative z-10 w-full max-w-sm px-4">
-          <div className="auth-card flex flex-col items-center px-8 py-10">
-
-            {/* ── Logo ── */}
-            <div className="animate-fade-in-up delay-100 duration-500 mb-1">
-              <AllenLogo />
-            </div>
-
-            {/* ── Tagline ── */}
-            <p className="animate-fade-in-up delay-200 duration-500 mb-8 text-center text-sm leading-relaxed text-text-muted/90">
-              AI-powered code review, instantly.
-            </p>
-
-            {/* ── GitHub Button ── */}
-            <SignInWithGithub
-              onClick={handleGithubSignIn}
-            />
-
-            {/* ── Divider ── */}
-            <div className="animate-fade-in-up delay-360 duration-500 my-5 flex w-full items-center gap-3">
-              <div className="h-px flex-1 [background:var(--gradient-divider-right)]" />
-              <span className="select-none text-xs font-medium tracking-widest text-text-muted/60">
-                OR
-              </span>
-              <div className="h-px flex-1 [background:var(--gradient-divider-left)]" />
-            </div>
-
-            {/* ── Guest Button ── */}
-            <ContinueAsGuest
-              onClick={handleGuestContinue}
-            />
-
-            {/* ── Footer note ── */}
-            <p className="mt-7 text-center text-xs leading-relaxed text-text-muted/45">
-              Guest sessions are not saved.{" "}
-              <br />
-              Sign in to keep your review history.
-            </p>
-          </div>
-        </div>
+        <AuthCard />
       </main>
     </>
   );
