@@ -227,7 +227,7 @@ export default function EditorPage() {
                         </p>
                       ),
                       blockquote: ({ children }) => (
-                        <blockquote className="my-3 rounded-lg border-l-4 border-orange-500 bg-orange-500/[0.07] px-4 py-2.5 text-sm text-orange-300">
+                        <blockquote className="my-3 rounded-lg border-l-4 border-orange-500 bg-orange-500/7 px-4 py-2.5 text-sm text-orange-300">
                           {children}
                         </blockquote>
                       ),
@@ -291,7 +291,7 @@ export default function EditorPage() {
               ) : (
                 /* Empty state */
                 <div className="flex h-full flex-col items-center justify-center gap-4 opacity-35">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-blue-400/18 bg-blue-400/[0.07]">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-blue-400/18 bg-blue-400/7">
                     <svg viewBox="0 0 24 24" fill="none" stroke="#38BDF8" strokeWidth="1.5" className="h-8 w-8">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 6.75 22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3-4.5 16.5" />
                     </svg>
